@@ -1,0 +1,15 @@
+profile = "prod"
+
+[server]
+addr = "0.0.0.0"
+port = 8_080
+
+[redis]
+username = ""
+password = ""
+host = "127.0.0.1"
+port = 6_379
+database_name = "0"
+
+[http]
+timeout = 10
