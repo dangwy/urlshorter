@@ -1,10 +1,7 @@
 use chrono::{NaiveDateTime, Utc};
 use sea_orm::prelude::DateTime;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
-    DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, DbBackend,
-};
+use sea_orm::{sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, DbBackend, SelectColumns};
 use serde_json::from_str;
 use uuid::Uuid;
 use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
@@ -35,12 +32,26 @@ pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse, rela_id: i64) -> 
     Ok(link.id)
 }
 
+// #[tracing::instrument(skip_all)]
+// pub async fn find_by_domain_and_alias<C>(conn: &C, domain: &str, alias: &str,
+// ) -> AppResult<Option<entity::urls::Model>>
+// where
+//     C: ConnectionTrait,
+// {
+//     let model = entity::urls::Entity::find()
+//         .filter(
+//             entity::urls::Column::Domain.eq(domain)
+//                 .and(entity::urls::Column::Alias.eq(alias))
+//                 .and(entity::urls::Column::Deleted.eq(false)),
+//         )
+//         .one(conn)
+//         .await?;
+//     Ok(model)
+// }
+
 #[tracing::instrument(skip_all)]
-pub async fn find_by_domain_and_alias<C>(conn: &C, domain: &str, alias: &str,
-) -> AppResult<Option<entity::urls::Model>>
-where
-    C: ConnectionTrait,
-{
+pub async fn find_by_domain_and_alias(conn: &DatabaseConnection, domain: &str, alias: &str,
+) -> AppResult<Option<entity::urls::Model>> {
     let model = entity::urls::Entity::find()
         .filter(
             entity::urls::Column::Domain.eq(domain)
@@ -53,20 +64,26 @@ where
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_domain_and_alias_1(conn: &DatabaseTransaction, domain: &str, alias: &str,
-) -> AppResult<Option<entity::urls::Model>>
-{
-    let model = entity::urls::Entity::find()
-        .filter(
-            entity::urls::Column::Domain.eq(domain)
-                .and(entity::urls::Column::Alias.eq(alias))
-                .and(entity::urls::Column::Deleted.eq(false)),
-        )
-        .one(conn)
-        .await?;
-    Ok(model)
+pub async fn delete(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
+    let url = entity::urls::ActiveModel {
+        id: Set(id),
+        ..Default::default()
+    };
+
+    let _ = entity::urls::Entity::delete(url).exec(conn).await?;
+    Ok(())
 }
 
+#[tracing::instrument(skip_all)]
+pub async fn update_2_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
+    let url = entity::urls::ActiveModel {
+        id: Set(id),
+        deleted: Set(true),
+        ..Default::default()
+    };
+    entity::urls::Entity::update(url).exec(conn).await?;
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {

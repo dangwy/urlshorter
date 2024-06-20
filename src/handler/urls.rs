@@ -53,7 +53,7 @@ pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequ
 // Query(param): Query<GetUrlQueryParam>,
 pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(String,String)> )
     -> AppResult<Json<UrlResponse>> {
-    info!("Get url info with domain and alias: {domain:?}/{alias:?}.");
+    info!("Get url info with domain and alias: {domain:?}/{alias:?}");
     match service::url::get(state, &domain, &alias).await {
         Ok(resp) => {
             info!("Get url info successfully.");
@@ -66,11 +66,10 @@ pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(Stri
     }
 }
 
-/*
+
 /// Delete short url.
 #[utoipa::path(
     delete,
-    request_body = ActiveRequest,
     path = "/alias",
     responses(
     (status = 200, description = "Success active user", body = [MessageResponse]),
@@ -78,12 +77,13 @@ pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(Stri
     (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn delete(State(state): State<AppState>, Json(req): Json<ActiveRequest>,) -> AppResult<Json<UrlResponse>> {
-    info!("Active user with token: {req:?}.");
-    match alias::get(&state, req).await {
-        Ok(_) => {
+pub async fn delete(State(state): State<AppState>, Path((domain,alias)): Path<(String,String)>)
+    -> AppResult<> {
+    info!("Delete short url alias: {domain:?}/{alias:?}");
+    match service::url::delete(state, &domain, &alias).await {
+        Ok(resp) => {
             info!("User successfully activated.");
-            Ok(Json(MessageResponse::new("User successfully activated.")))
+            Ok(())
         }
         Err(e) => {
             info!("The user activation operation was not successful: {e:?}");
@@ -92,6 +92,7 @@ pub async fn delete(State(state): State<AppState>, Json(req): Json<ActiveRequest
     }
 }
 
+/*
 /// Redirect to short url.
 #[utoipa::path(
     get,

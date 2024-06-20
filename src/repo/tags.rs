@@ -1,14 +1,17 @@
+use log::info;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
     DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait
 };
 use sea_orm::ActiveValue::Set;
+// use serde::de::Unexpected::Option;
 use crate::{
     dto::{request::CreateUrlRequest, response::UrlResponse}, // Direction, PageQueryParam
     entity,
     error::{AppResult, ToAppResult},
     utils,
 };
+
 
 #[tracing::instrument(skip_all)]
 pub async fn save(tx: &DatabaseTransaction, domain: &str, tag: &str,
@@ -26,31 +29,27 @@ pub async fn save(tx: &DatabaseTransaction, domain: &str, tag: &str,
 
 #[tracing::instrument(skip_all)]
 pub async fn find_by_id(conn: &DatabaseConnection, tag_id: i64, domain: &str
-) -> AppResult<Vec<entity::tags::Model>> {
-    let models = entity::tags::Entity::find_by_id(tag_id)
+) -> AppResult<Option<entity::tags::Model>> {
+    let model = entity::tags::Entity::find_by_id(tag_id)
         .filter(entity::urls::Column::Deleted.eq(false)
             .and(entity::urls::Column::Domain.eq(domain)))
-        .all(conn)
+        .one(conn)
         .await?;
-    Ok(models)
+    Ok(model)
 }
 
 #[tracing::instrument(skip_all)]
 pub async fn find_by_ids(conn: &DatabaseConnection, tag_ids: Vec<i64>, domain: &str
 ) -> AppResult<Vec<String>> {
     let mut tags: Vec<String> = vec![];
-
-    for tag_id in tag_ids {
-        let model = entity::tags::Entity::find()
-            .filter(entity::urls::Column::Deleted.eq(false)
-                .and(entity::urls::Column::Domain.eq(domain))
-                .and(entity::urls::Column::Id.eq(tag_id))
-            )
-            .one(conn)
-            .await?;
-        model.map(|m| tags.push(m.tag));
-    }
-
+    let model = entity::tags::Entity::find()
+        .filter(entity::tags::Column::Deleted.eq(false)
+            .and(entity::tags::Column::Domain.eq(domain))
+            .and(entity::tags::Column::Id.is_in(tag_ids))
+        )
+        .all(conn)
+        .await?;
+    model.iter().for_each(|m| tags.push(m.tag.clone()));
     Ok(tags)
 }
 

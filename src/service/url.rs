@@ -19,6 +19,7 @@ use chrono::prelude::*;
 use serde_json::from_str;
 use test_context::futures::future;
 use crate::entity;
+use crate::entity::urls::*;
 use crate::error::ToAppResult;
 
 use crate::utils;
@@ -61,69 +62,64 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
     };
 
     let tx = state.db.begin().await?;
-    let sid = repo::urls::save(&tx, &res, max_rela_id).await?;
+    let _ = repo::urls::save(&tx, &res, max_rela_id).await?;
     tx.commit().await?;
 
     Ok(res)
 }
 
 // req: GetUrlQueryParam
-pub async fn get(state: AppState, domain: &str, alias: &str ) -> AppResult<UrlResponse> {
-    let tx = state.db.begin().await?;
-    let res = repo::urls::find_by_domain_and_alias_1(&tx, domain, alias).await?;
-    match res {
-        None => {
-            let e = invalid_input_error("","url not found");
-            Err(e)
-        }
+//
+pub async fn get(state: AppState, domain: &str, alias: &str) -> AppResult<UrlResponse> {
+    let urls_model = repo::urls::find_by_domain_and_alias(&state.db, domain, alias).await?;
+    match urls_model {
         Some(res) => {
-            let res = UrlResponse {
+            let tag_ids = if let Some(rela_id) = res.rela_id {
+                repo::rela::find_by_relaid(&state.db, rela_id, &domain).await.unwrap_or_default()
+            } else {
+                vec![]
+            };
+
+            let tags = repo::tags::find_by_ids(&state.db, tag_ids, &domain).await?;
+            let url = UrlResponse {
                 domain: res.domain.clone(),
                 alias: res.alias,
                 shorter_url: res.short_url,
                 deleted: res.deleted,
-                tags: {
-                    if let Some(rela_id) = res.rela_id {
-                        repo::rela::find_by_relaid(&state.db, rela_id, &res.domain).await?
-                    }else {
-                        vec![]
-                    }
-                },
+                tags,
                 created_at: res.created_at,
                 expired_at: res.expired_at,
                 original_url: res.original_url,
                 description: res.description.unwrap_or_default(),
                 hits: res.hits,
             };
-            tx.commit().await?;
-            Ok(res)
-        }
+            Ok(url)
+        },
+        None => Err(invalid_input_error("alias","Url not found.")),
     }
-
 }
 
-// UrlResponse {
-//     domain: res.domain,
-//     alias: res.alias,
-//     shorter_url: res.short_url,
-//     deleted: res.deleted,
-//     tags: {
-//         res.rela_id
-//     },
-//     created_at: res.created_at,
-//     expired_at: res.expired_at,
-//     original_url: res.original_url,
-//     description: res.description?,
-//     hits: res.hits,
-// }.to_result();
+
+pub async fn delete(state: AppState, domain: &str, alias: &str) -> AppResult<()> {
+    let urls_model = repo::urls::find_by_domain_and_alias(&state.db, domain, alias).await?;
+    if let Some(res) = urls_model {
+        if !res.rela_id.is_none(){
+            let tx = state.db.begin().await?;
+            let _ = repo::rela::update_to_deleted(&tx, res.rela_id.unwrap()).await?;
+            let _ = repo::urls::update_2_deleted(&tx, res.rela_id.unwrap()).await?;
+            
+            tx.commit().await?;
+        }
+        
+    }else{
+        return Err(invalid_input_error("alias","Url not found."));
+    }
+    let tx = state.db.begin().await?;
+    Ok(())
+}
 
 /*
-pub async fn delete() -> AppResult<UrlResponse> {
-    info!("Get a user from alias request: {req:?}.");
-}
-
 pub async fn direct() -> AppResult<UrlResponse> {
     info!("Get a user from alias request: {req:?}.");
 }
-
- */
+*/

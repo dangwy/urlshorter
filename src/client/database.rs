@@ -3,10 +3,11 @@ use std::time::Duration;
 use sea_orm::{ConnectOptions, ConnectionTrait, Database, DatabaseConnection};
 // use sea_orm_migration::MigratorTrait;
 use tracing::info;
-
+use utils::random;
 use crate::configure::AppConfig;
 use crate::error::AppResult;
 use crate::utils;
+
 
 pub type DatabaseClient = DatabaseConnection;
 
@@ -23,6 +24,7 @@ impl DatabaseClientExt for DatabaseClient {
             .acquire_timeout(Duration::from_secs(8))
             .idle_timeout(Duration::from_secs(8))
             .max_lifetime(Duration::from_secs(8))
+            .set_schema_search_path(config.db.schema.clone())
             .sqlx_logging(true)
             .sqlx_logging_level(log::LevelFilter::Debug);
         let db = Database::connect(opt).await?;
@@ -33,7 +35,7 @@ impl DatabaseClientExt for DatabaseClient {
 async fn create_database(db: &DatabaseConnection, database_name: &str) -> AppResult {
     db.execute_unprepared(&format!("CREATE DATABASE {database_name}"))
         .await?;
-    tracing::info!("Create new database: {database_name}.");
+    info!("Create new database: {database_name}.");
     Ok(())
 }
 
@@ -64,6 +66,8 @@ pub async fn drop_database(db: &DatabaseConnection, database_name: &str) -> AppR
 mod tests {
     use super::*;
     use crate::constant::CONFIG;
+    use crate::entity::tags;
+    use sea_orm::EntityTrait;
 
     #[tokio::test]
     async fn test_ping_database() {
@@ -86,5 +90,16 @@ mod tests {
         );
         "#;
         db.execute_unprepared(query).await.unwrap();
+    }
+    
+    #[tokio::test]
+    async fn test_select_table() {
+        let db = DatabaseClient::build_from_config(&CONFIG).await.unwrap();
+        let tags: Vec<tags::Model> = tags::Entity::find().all(&db).await.unwrap();
+
+        println!("All the tags in db:");
+        for tag in tags {
+            println!("ID: {}, TITLE: {}", tag.id, tag.tag);
+        }
     }
 }

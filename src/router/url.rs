@@ -7,6 +7,6 @@ pub fn add_routers(router: axum::Router<AppState>) -> axum::Router<AppState> {
     router
         .route("/", post(urls::create))
         .route("/alias/:domain/:alias", get(urls::get))
-        // .route("/alias", delete(alias::delete))
+        .route("/alias/:domain/:alias", delete(urls::delete))
         // .route("/", get(alias::redirect))
 }
