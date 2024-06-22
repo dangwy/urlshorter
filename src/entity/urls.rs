@@ -17,7 +17,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub short_url: String,
     pub deleted: bool,
-    pub rela_id: Option<i64>,
+    pub tags: Option<Vec<i64>>,
     pub created_at: DateTime,
     pub expired_at: Option<DateTime>,
     #[sea_orm(column_type = "Text")]

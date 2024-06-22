@@ -5,7 +5,6 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 // use strum::Display;
 use utoipa::{IntoParams, ToSchema};
-// use uuid::Uuid;
 
 #[derive(Debug,  Deserialize, Serialize,  Validate, utoipa::ToSchema)]
 pub struct CreateUrlRequest {
@@ -46,4 +45,25 @@ pub struct GetUrlQueryParam {
     pub domain: String,
     #[garde(skip)]
     pub alias: String,
+}
+
+#[derive(Debug, Deserialize, ToSchema, Validate, IntoParams)]
+pub struct PatchUrlRequest {
+    #[garde(skip)]
+    pub original_url: String,
+    #[garde(skip)]
+    pub tags: String,
+    #[garde(skip)]
+    pub expired_at: String,
+}
+
+// tags request
+#[derive(Debug,  Deserialize, Serialize,  Validate, utoipa::ToSchema)]
+pub struct CreateTagRequest {
+    #[garde(skip)]
+    pub tag: String,
+    #[garde(skip)]
+    pub domain: String,
+    #[garde(skip)]
+    pub expired_at: String,
 }

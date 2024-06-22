@@ -10,7 +10,6 @@ use crate::{
 
 pub mod urls;
 pub mod tags;
-pub mod rela;
 
 pub trait AppEntity {
     const RESOURCE: ResourceType;

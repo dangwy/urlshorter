@@ -1,7 +1,7 @@
 # 🦀 urlshorter
 `urlshorter` is a high-performance and fully functional short url service in rust, you can use it directly in the production environment.
 
-Uses [Auxm](https://github.com/tokio-rs/axum), [SeaOrm](https://github.com/SeaQL/sea-orm) ORM and [PostgreSQL](https://www.postgresql.org/), and [Redis](https://github.com/mitsuhiko/redis-rs), the system architecture references [RUSTfulapi](https://github.com/robatipoor/rustfulapi)
+Uses [Auxm](https://github.com/tokio-rs/axum), [SeaOrm](https://github.com/SeaQL/sea-orm) ORM and [PostgreSQL](https://www.postgresql.org/), and [Redis](https://github.com/mitsuhiko/redis-rs), the system architecture references [RUSTfulapi](https://github.com/robatipoor/rustfulapi).
 
 ---
 

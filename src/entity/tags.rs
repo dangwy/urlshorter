@@ -12,11 +12,8 @@ pub struct Model {
     pub id: i64,
     #[sea_orm(column_type = "Text")]
     pub tag: String,
-    pub deleted: bool,
-    pub created_at: DateTime,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub description: Option<String>,
     pub domain: String,
+    pub created_at: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

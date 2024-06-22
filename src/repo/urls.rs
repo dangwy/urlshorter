@@ -1,20 +1,23 @@
 use chrono::{NaiveDateTime, Utc};
 use sea_orm::prelude::DateTime;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, DbBackend, SelectColumns};
+use sea_orm::{sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
+              DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, DbBackend, SelectColumns};
 use serde_json::from_str;
 use uuid::Uuid;
 use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
 use crate::{entity, error::{AppResult, ToAppResult}, repo, utils};
 
 #[tracing::instrument]
-pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse, rela_id: i64) -> AppResult<i64> {
-    let link = entity::urls::ActiveModel {
+pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64> {
+    let tag_ids = repo::tags::get_or_save_by_tags(tx,  &res.domain, &res.tags).await?;
+
+    let url = entity::urls::ActiveModel {
         domain: Set(res.domain.clone()),
         alias: Set(res.alias.clone()),
         short_url: Set(res.shorter_url.clone()),
         deleted: Set(res.deleted),
-        rela_id: Set(Some(rela_id)),
+        tags: Set(Some(tag_ids)),
         created_at: Set(res.created_at),
         expired_at: Set(res.expired_at),
         original_url: Set(res.original_url.clone()),
@@ -25,32 +28,11 @@ pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse, rela_id: i64) -> 
     .insert(tx)
     .await?;
 
-    if !res.tags.is_empty() {
-        repo::rela::save_by_tags(tx, rela_id, &res.tags, &res.domain,).await?;
-    }
-
-    Ok(link.id)
+    Ok(url.id)
 }
 
-// #[tracing::instrument(skip_all)]
-// pub async fn find_by_domain_and_alias<C>(conn: &C, domain: &str, alias: &str,
-// ) -> AppResult<Option<entity::urls::Model>>
-// where
-//     C: ConnectionTrait,
-// {
-//     let model = entity::urls::Entity::find()
-//         .filter(
-//             entity::urls::Column::Domain.eq(domain)
-//                 .and(entity::urls::Column::Alias.eq(alias))
-//                 .and(entity::urls::Column::Deleted.eq(false)),
-//         )
-//         .one(conn)
-//         .await?;
-//     Ok(model)
-// }
-
 #[tracing::instrument(skip_all)]
-pub async fn find_by_domain_and_alias(conn: &DatabaseConnection, domain: &str, alias: &str,
+pub async fn find_by_alias(conn: &DatabaseConnection, domain: &str, alias: &str,
 ) -> AppResult<Option<entity::urls::Model>> {
     let model = entity::urls::Entity::find()
         .filter(
@@ -75,7 +57,7 @@ pub async fn delete(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn update_2_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
+pub async fn update_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<> {
     let url = entity::urls::ActiveModel {
         id: Set(id),
         deleted: Set(true),
@@ -84,6 +66,36 @@ pub async fn update_2_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<
     entity::urls::Entity::update(url).exec(conn).await?;
     Ok(())
 }
+
+#[tracing::instrument(skip_all)]
+pub async fn update_hits(conn: &DatabaseTransaction, id: i64, hits: i32)
+                           -> AppResult<entity::urls::Model> {
+    let url = entity::urls::ActiveModel {
+        id: Set(id),
+        hits: Set(hits),
+        ..Default::default()
+    };
+    let model = entity::urls::Entity::update(url).exec(conn).await?;
+
+    Ok(model)
+}
+
+#[tracing::instrument(skip_all)]
+pub async fn update_some(conn: &DatabaseTransaction, id: i64,
+                           original_url: &str,tags: Vec<i64>, expired_at: Option<NaiveDateTime>)
+    -> AppResult<entity::urls::Model> {
+    let url = entity::urls::ActiveModel {
+        id: Set(id),
+        original_url: Set(original_url.to_string()),
+        tags: Set(Some(tags)),
+        expired_at: Set(expired_at),
+        ..Default::default()
+    };
+    let model = entity::urls::Entity::update(url).exec(conn).await?;
+
+    Ok(model)
+}
+
 
 #[cfg(test)]
 mod tests {
