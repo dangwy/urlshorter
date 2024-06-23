@@ -21,8 +21,10 @@ pub trait RedisClientExt: ClientBuilder {
         expire: Duration,
     ) -> impl std::future::Future<Output = Result<(), RedisError>>;
     fn exist(&self, key: &str) -> impl std::future::Future<Output = Result<bool, RedisError>>;
-    fn get(&self, key: &str)
-           -> impl std::future::Future<Output = Result<Option<String>, RedisError>>;
+    fn get(
+        &self,
+        key: &str,
+    ) -> impl std::future::Future<Output = Result<Option<String>, RedisError>>;
     fn del(&self, key: &str) -> impl std::future::Future<Output = Result<bool, RedisError>>;
     fn ttl(&self, key: &str) -> impl std::future::Future<Output = Result<i64, RedisError>>;
     fn incr(&self, key: &str) -> impl std::future::Future<Output = Result<i64, RedisError>>;
@@ -65,9 +67,15 @@ impl RedisClientExt for Client {
 
     async fn set(&self, key: &str, value: &str, expire: Duration) -> Result<(), RedisError> {
         let mut conn = self.get_multiplexed_async_connection().await?;
-        let msg: String = redis::cmd("SET").arg(&[key, value]).query_async(&mut conn).await?;
+        let msg: String = redis::cmd("SET")
+            .arg(&[key, value])
+            .query_async(&mut conn)
+            .await?;
         info!("set key redis: {msg}");
-        let msg: i32 = redis::cmd("EXPIRE").arg(&[key, &expire.as_secs().to_string()]).query_async(&mut conn).await?;
+        let msg: i32 = redis::cmd("EXPIRE")
+            .arg(&[key, &expire.as_secs().to_string()])
+            .query_async(&mut conn)
+            .await?;
         info!("set expire time redis: {msg}");
         Ok(())
     }
@@ -126,7 +134,10 @@ mod tests {
     async fn test_set_key_redis() {
         let key: String = Faker.fake();
         let value = Uuid::new_v4().to_string();
-        REDIS.set(&key, &value, Duration::from_secs(5)).await.unwrap();
+        REDIS
+            .set(&key, &value, Duration::from_secs(5))
+            .await
+            .unwrap();
         let resp = REDIS.get(&key).await.unwrap();
         assert!(matches!(resp, Some(v) if v == value));
         let resp = REDIS.ttl(&key).await.unwrap();
@@ -137,7 +148,10 @@ mod tests {
     async fn test_exist_key_redis() {
         let key: String = Faker.fake();
         let value = Uuid::new_v4().to_string();
-        REDIS.set(&key, &value, Duration::from_secs(4)).await.unwrap();
+        REDIS
+            .set(&key, &value, Duration::from_secs(4))
+            .await
+            .unwrap();
         let resp = REDIS.get(&key).await.unwrap();
         assert!(matches!(resp, Some(v) if v == value));
         let resp = REDIS.exist(&key).await.unwrap();
@@ -151,7 +165,10 @@ mod tests {
     async fn test_del_key_redis() {
         let key: String = Faker.fake();
         let value = Uuid::new_v4().to_string();
-        REDIS.set(&key, &value, Duration::from_secs(4)).await.unwrap();
+        REDIS
+            .set(&key, &value, Duration::from_secs(4))
+            .await
+            .unwrap();
         let resp = REDIS.get(&key).await.unwrap();
         assert!(matches!(resp, Some(v) if v == value));
         let resp = REDIS.exist(&key).await.unwrap();
@@ -166,7 +183,10 @@ mod tests {
         let key: String = Faker.fake();
         let ttl = 4;
         let value = Uuid::new_v4().to_string();
-        REDIS.set(&key, &value, Duration::from_secs(ttl)).await.unwrap();
+        REDIS
+            .set(&key, &value, Duration::from_secs(ttl))
+            .await
+            .unwrap();
         let resp = REDIS.get(&key).await.unwrap();
         assert!(matches!(resp, Some(v) if v == value));
         let resp = REDIS.ttl(&key).await.unwrap();

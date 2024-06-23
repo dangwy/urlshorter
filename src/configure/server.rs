@@ -1,6 +1,5 @@
-use std::net::{AddrParseError, SocketAddr};
 use serde::Deserialize;
-
+use std::net::{AddrParseError, SocketAddr};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {

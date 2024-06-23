@@ -1,11 +1,11 @@
+use tracing::info;
 use urlshorter::configure;
+use urlshorter::constant::CONFIG;
 use urlshorter::error::AppResult;
 use urlshorter::server::AppServer;
-use urlshorter::constant::CONFIG;
-use tracing::info;
 
 #[tokio::main]
-async fn main()-> AppResult<()> {
+async fn main() -> AppResult<()> {
     let _file_appender_guard = configure::tracing::init()?;
     info!("The initialization of Tracing was successful.");
 

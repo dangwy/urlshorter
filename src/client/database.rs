@@ -2,12 +2,11 @@ use std::time::Duration;
 
 use sea_orm::{ConnectOptions, ConnectionTrait, Database, DatabaseConnection};
 // use sea_orm_migration::MigratorTrait;
-use tracing::info;
-use utils::random;
 use crate::configure::AppConfig;
 use crate::error::AppResult;
 use crate::utils;
-
+use tracing::info;
+use utils::random;
 
 pub type DatabaseClient = DatabaseConnection;
 
@@ -91,7 +90,7 @@ mod tests {
         "#;
         db.execute_unprepared(query).await.unwrap();
     }
-    
+
     #[tokio::test]
     async fn test_select_table() {
         let db = DatabaseClient::build_from_config(&CONFIG).await.unwrap();

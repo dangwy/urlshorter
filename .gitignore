@@ -1,11 +1,11 @@
 target/
 .idea/
 .vscode/
+.history/
 .cargo/
 log/
 logs/
 docs/
 settings/local.toml
 Cargo.lock
-urlshorter
 .DS_Store

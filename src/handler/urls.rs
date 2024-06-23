@@ -1,15 +1,15 @@
-use axum::extract::{Query, State, Path};
+use axum::extract::{Path, Query, State};
 use axum::Json;
 // use axum::routing::{get, path};
 use garde::Validate;
 use tracing::{info, warn};
 
-use crate::error::AppResult;
-use crate::server::state::AppState;
-use crate::utils::claim::UserClaims;
 use crate::dto::request::*;
 use crate::dto::response::*;
+use crate::error::AppResult;
+use crate::server::state::AppState;
 use crate::service;
+use crate::utils::claim::UserClaims;
 
 /// Create short url
 #[utoipa::path(
@@ -22,8 +22,10 @@ use crate::service;
         (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequest>,)
-    -> AppResult<Json<UrlResponse>> {
+pub async fn create(
+    State(state): State<AppState>,
+    Json(req): Json<CreateUrlRequest>,
+) -> AppResult<Json<UrlResponse>> {
     info!("Create a new short link with request: {req:?}");
     req.validate(&())?;
     match service::url::create(state, req).await {
@@ -48,8 +50,10 @@ pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequ
         (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(String,String)>)
-    -> AppResult<Json<UrlResponse>> {
+pub async fn get(
+    State(state): State<AppState>,
+    Path((domain, alias)): Path<(String, String)>,
+) -> AppResult<Json<UrlResponse>> {
     info!("Get url info with domain and alias: {domain:?}/{alias:?}");
     match service::url::get(state, &domain, &alias).await {
         Ok(resp) => {
@@ -63,7 +67,6 @@ pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(Stri
     }
 }
 
-
 /// Delete short url.
 #[utoipa::path(
     delete,
@@ -74,8 +77,10 @@ pub async fn get(State(state): State<AppState>, Path((domain,alias)): Path<(Stri
     (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn delete(State(state): State<AppState>, Path((domain,alias)): Path<(String,String)>)
-    -> AppResult<> {
+pub async fn delete(
+    State(state): State<AppState>,
+    Path((domain, alias)): Path<(String, String)>,
+) -> AppResult {
     info!("Delete short url alias: {domain:?}/{alias:?}");
     match service::url::delete(state, &domain, &alias).await {
         Ok(resp) => {
@@ -100,10 +105,11 @@ pub async fn delete(State(state): State<AppState>, Path((domain,alias)): Path<(S
         (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn patch(State(state): State<AppState>,
-                   Path((domain,alias)): Path<(String,String)>,
-                   Json(req): Json<PatchUrlRequest>)
-    -> AppResult<Json<UrlResponse>> {
+pub async fn patch(
+    State(state): State<AppState>,
+    Path((domain, alias)): Path<(String, String)>,
+    Json(req): Json<PatchUrlRequest>,
+) -> AppResult<Json<UrlResponse>> {
     info!("patch short url: {domain:?}/{alias:?}");
     match service::url::patch(state, &domain, &alias, req).await {
         Ok(resp) => {
@@ -128,8 +134,10 @@ pub async fn patch(State(state): State<AppState>,
     (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn redirect(State(state): State<AppState>, Path((domain,alias)): Path<(String,String)>,)
-    -> AppResult<Json<RedirectUrlResponse>> {
+pub async fn redirect(
+    State(state): State<AppState>,
+    Path((domain, alias)): Path<(String, String)>,
+) -> AppResult<Json<RedirectUrlResponse>> {
     info!("Redirect to original url with token: {domain:?}/{alias:?}.");
     match service::url::redirect(state, &domain, &alias).await {
         Ok(resp) => {

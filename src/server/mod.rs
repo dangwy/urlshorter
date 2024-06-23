@@ -1,6 +1,6 @@
+use self::state::AppState;
 use crate::configure::AppConfig;
 use crate::error::AppResult;
-use self::state::AppState;
 use crate::router::create_router_app;
 
 pub mod state;

@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-// use uuid::Uuid;
 
 // urls response
 #[derive(Debug, Deserialize, Serialize, ToSchema)]

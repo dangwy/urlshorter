@@ -1,6 +1,6 @@
-use axum::routing::{get, post, delete, patch};
-use crate::server::state::AppState;
 use crate::handler::urls;
+use crate::server::state::AppState;
+use axum::routing::{delete, get, patch, post};
 
 pub fn add_routers(router: axum::Router<AppState>) -> axum::Router<AppState> {
     router

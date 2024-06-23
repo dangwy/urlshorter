@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use self::{db::DatabaseConfig,http::HttpClientConfig, redis::RedisConfig, server::ServerConfig};
+use self::{db::DatabaseConfig, http::HttpClientConfig, redis::RedisConfig, server::ServerConfig};
 use crate::utils::dir::get_project_root;
 use ::tracing::info;
 use config::{ConfigError, Environment};
@@ -30,7 +30,7 @@ impl AppConfig {
         let config_dir = get_settings_dir()?;
         let profile = std::env::var("APP_PROFILE")
             .map(|env| Profile::from_str(&env).map_err(|e| ConfigError::Message(e.to_string())))
-            .unwrap_or_else(|_e| Ok(Profile::Dev))?;
+            .unwrap_or_else(|_e| Ok(Profile::Local))?;
         let profile_filename = format!("{profile}.toml");
         let config = config::Config::builder()
             .add_source(config::File::from(config_dir.join("local.toml")))

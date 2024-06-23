@@ -1,39 +1,24 @@
-use axum::Json;
-use sea_orm::{ActiveModelTrait, ConnectionTrait};
-use sea_orm::DatabaseTransaction;
-use sea_orm::Set;
-use sea_orm::TransactionTrait;
-use tracing::{error, info};
-// use crate::client::redis_cluster::RedisClientExt;
-use crate::server::state::AppState;
-use crate::service;
-use crate::service::redis::{RelaIdKey, UrlKey};
 use crate::dto::request::*;
 use crate::dto::response::*;
-use crate::dto::*;
 use crate::error::invalid_input_error;
 use crate::error::AppResult;
 use crate::repo;
-use crate::constant::REDIS_KEY_PREFIX;
-use crate::entity::urls::ActiveModel;
+use crate::server::state::AppState;
+use crate::service;
+use crate::service::redis::UrlKey;
 use chrono::prelude::*;
-use serde_json::from_str;
-use test_context::futures::future;
-use crate::entity;
-use crate::entity::urls::*;
-use crate::error::ToAppResult;
-
-use crate::utils;
+use sea_orm::ActiveModelTrait;
+use sea_orm::TransactionTrait;
 
 pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResponse> {
     // If alias is empty, generate a new one, otherwise set it to redis
     let mut alias = if req.alias.is_empty() {
         let key = UrlKey {
-            domain: req.domain.clone()  + ":" + "urlshorter"
+            domain: req.domain.clone() + ":" + "urlshorter",
         };
         let incr_id = service::redis::incr(&state.redis, &key).await?;
         base62::encode(incr_id as u128)
-    }else{
+    } else {
         req.alias.clone()
     };
 
@@ -47,7 +32,7 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
         expired_at: {
             if req.expired_at.is_empty() {
                 None
-            }else {
+            } else {
                 NaiveDateTime::parse_from_str(req.expired_at.as_str(), "%Y-%m-%d %H:%M:%S").ok()
             }
         },
@@ -66,7 +51,8 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
 pub async fn get(state: AppState, domain: &str, alias: &str) -> AppResult<UrlResponse> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
     if let Some(res) = urls_model {
-        let tags = repo::tags::find_by_ids(&state.db, &domain, res.tags.unwrap_or_default()).await?;
+        let tags =
+            repo::tags::find_by_ids(&state.db, &domain, res.tags.unwrap_or_default()).await?;
         let url = UrlResponse {
             domain: res.domain.clone(),
             alias: res.alias,
@@ -80,51 +66,56 @@ pub async fn get(state: AppState, domain: &str, alias: &str) -> AppResult<UrlRes
             hits: res.hits,
         };
         Ok(url)
-    }else {
-        Err(invalid_input_error("alias","Url not found."))
+    } else {
+        Err(invalid_input_error("alias", "Url not found."))
     }
 }
 
 pub async fn delete(state: AppState, domain: &str, alias: &str) -> AppResult<i64> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
     if let Some(res) = urls_model {
-            let tx = state.db.begin().await?;
-            let _ = repo::urls::update_deleted(&tx, res.id).await?;
-            tx.commit().await?;
-            Ok(res.id)
-    }else{
-        Err(invalid_input_error("alias","Url not found."))
+        let tx = state.db.begin().await?;
+        let _ = repo::urls::update_deleted(&tx, res.id).await?;
+        tx.commit().await?;
+        Ok(res.id)
+    } else {
+        Err(invalid_input_error("alias", "Url not found."))
     }
 }
 
-pub async fn patch(state: AppState, domain: &str, alias: &str, req: PatchUrlRequest)
-    -> AppResult<UrlResponse> {
+pub async fn patch(
+    state: AppState,
+    domain: &str,
+    alias: &str,
+    req: PatchUrlRequest,
+) -> AppResult<UrlResponse> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
 
     let tx = state.db.begin().await?;
 
     let ret = if let Some(res) = urls_model {
-        let original_url = if req.original_url.is_empty(){
+        let original_url = if req.original_url.is_empty() {
             res.original_url
-        }else {
+        } else {
             req.original_url
         };
 
         let expired_at = if req.expired_at.is_empty() {
             res.expired_at
-        }else{
+        } else {
             NaiveDateTime::parse_from_str(req.expired_at.as_str(), "%Y-%m-%d %H:%M:%S").ok()
         };
 
         let tags = if req.tags.is_empty() {
             repo::tags::find_by_ids(&state.db, &domain, res.tags.unwrap()).await?
-        }else{
+        } else {
             req.tags.split(",").map(|s| s.to_string()).collect()
         };
         let tag_ids = repo::tags::get_or_save_by_tags(&tx, &domain, &tags).await?;
 
-        let model = repo::urls::update_some(&tx, res.id,&original_url, tag_ids, expired_at).await?;
-        let url = UrlResponse{
+        let model =
+            repo::urls::update_some(&tx, res.id, &original_url, tag_ids, expired_at).await?;
+        let url = UrlResponse {
             domain: model.domain.clone(),
             alias: model.alias.clone(),
             shorter_url: model.short_url.clone(),
@@ -139,14 +130,18 @@ pub async fn patch(state: AppState, domain: &str, alias: &str, req: PatchUrlRequ
 
         tx.commit().await?;
         Some(url)
-    }else{
+    } else {
         None
     };
 
     Ok(ret.unwrap())
 }
 
-pub async fn redirect(state: AppState, domain: &str, alias: &str) -> AppResult<RedirectUrlResponse> {
+pub async fn redirect(
+    state: AppState,
+    domain: &str,
+    alias: &str,
+) -> AppResult<RedirectUrlResponse> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
     if let Some(res) = urls_model {
         let url = RedirectUrlResponse {
@@ -159,7 +154,7 @@ pub async fn redirect(state: AppState, domain: &str, alias: &str) -> AppResult<R
         tx.commit().await?;
 
         Ok(url)
-    }else{
-        Err(invalid_input_error("alias","Url not found."))
+    } else {
+        Err(invalid_input_error("alias", "Url not found."))
     }
 }

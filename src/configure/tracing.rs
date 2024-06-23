@@ -14,8 +14,8 @@ fn create_subscriber<W>(
     env_filter: EnvFilter,
     writer: W,
 ) -> impl Subscriber + Sync + Send
-    where
-        W: for<'a> MakeWriter<'a> + Send + Sync + 'static,
+where
+    W: for<'a> MakeWriter<'a> + Send + Sync + 'static,
 {
     Registry::default()
         .with(env_filter)
@@ -25,8 +25,8 @@ fn create_subscriber<W>(
 }
 
 pub fn init_subscriber<S>(subscriber: S) -> anyhow::Result<()>
-    where
-        S: Subscriber + Send + Sync + 'static,
+where
+    S: Subscriber + Send + Sync + 'static,
 {
     LogTracer::init()?;
     subscriber::set_global_default(subscriber)?;

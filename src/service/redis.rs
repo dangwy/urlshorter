@@ -2,10 +2,10 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::time::Duration;
 
-use tracing::info;
 use crate::client::redis::RedisClient;
 use crate::client::redis::RedisClientExt;
 use crate::error::AppResult;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::constant::*;
@@ -58,8 +58,8 @@ impl Display for crate::service::redis::RelaIdKey {
 
 // set
 pub async fn set<K>(client: &RedisClient, (key, value): (&K, &K::Value)) -> AppResult<()>
-    where
-        K: RedisKey,
+where
+    K: RedisKey,
 {
     info!("Set value to redis key :{key:?} value :{value:?}");
     let value = serde_json::to_string(value)?;
@@ -69,17 +69,15 @@ pub async fn set<K>(client: &RedisClient, (key, value): (&K, &K::Value)) -> AppR
 
 // get
 pub async fn get<K>(client: &RedisClient, key: &K) -> AppResult<Option<K::Value>>
-    where
-        K: RedisKey,
+where
+    K: RedisKey,
 {
     info!("Get value from redis key :{key}");
-    Ok(
-        client
-            .get(&key.to_string())
-            .await?
-            .map(|v| serde_json::from_str::<K::Value>(&v))
-            .transpose()?,
-    )
+    Ok(client
+        .get(&key.to_string())
+        .await?
+        .map(|v| serde_json::from_str::<K::Value>(&v))
+        .transpose()?)
 }
 
 // del
@@ -144,7 +142,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_and_get_str_redis_service() {
         let key: UrlKey = Faker.fake();
-        let value: String  = Faker.fake();;
+        let value: String = Faker.fake();
         set(&REDIS, (&key, &value)).await.unwrap();
         let actual_value = get(&REDIS, &key).await.unwrap().unwrap();
         info!(?actual_value, ?key);

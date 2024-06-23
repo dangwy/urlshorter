@@ -1,12 +1,12 @@
 // use fake::faker::internet::en::{Password, SafeEmail, Username};
-use lettre::transport::smtp::extension::ClientId::Domain;
-use fake::{Dummy, faker};
+use fake::{faker, Dummy};
 use garde::Validate;
+use lettre::transport::smtp::extension::ClientId::Domain;
 use serde::{Deserialize, Serialize};
 // use strum::Display;
 use utoipa::{IntoParams, ToSchema};
 
-#[derive(Debug,  Deserialize, Serialize,  Validate, utoipa::ToSchema)]
+#[derive(Debug, Deserialize, Serialize, Validate, utoipa::ToSchema)]
 pub struct CreateUrlRequest {
     #[garde(skip)]
     pub original_url: String,
@@ -23,7 +23,14 @@ pub struct CreateUrlRequest {
 }
 
 impl CreateUrlRequest {
-    pub fn new(url: &str, domain: &str, alias: &str, tags: &str, expired_at: &str, desc: &str) -> Self {
+    pub fn new(
+        url: &str,
+        domain: &str,
+        alias: &str,
+        tags: &str,
+        expired_at: &str,
+        desc: &str,
+    ) -> Self {
         Self {
             original_url: url.to_string(),
             domain: domain.to_string(),
@@ -58,7 +65,7 @@ pub struct PatchUrlRequest {
 }
 
 // tags request
-#[derive(Debug,  Deserialize, Serialize,  Validate, utoipa::ToSchema)]
+#[derive(Debug, Deserialize, Serialize, Validate, utoipa::ToSchema)]
 pub struct CreateTagRequest {
     #[garde(skip)]
     pub tag: String,

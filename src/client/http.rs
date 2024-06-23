@@ -1,8 +1,8 @@
-use std::time::Duration;
+use super::ClientBuilder;
+use crate::{configure::AppConfig, error::AppResult};
 use reqwest::Response;
 use serde::Serialize;
-use crate::{configure::AppConfig, error::AppResult};
-use super::ClientBuilder;
+use std::time::Duration;
 
 pub type HttpClient = reqwest::Client;
 
@@ -29,11 +29,9 @@ pub trait HttpClientExt: ClientBuilder {
 
 impl ClientBuilder for HttpClient {
     fn build_from_config(config: &AppConfig) -> AppResult<Self> {
-        Ok(
-            reqwest::Client::builder()
-                .timeout(Duration::from_secs(config.http.timeout))
-                .build()?,
-        )
+        Ok(reqwest::Client::builder()
+            .timeout(Duration::from_secs(config.http.timeout))
+            .build()?)
     }
 }
 

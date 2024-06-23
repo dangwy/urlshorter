@@ -2,8 +2,8 @@
 use fake::Dummy;
 use sea_orm::entity::prelude::*;
 
-use crate::error::ResourceType;
 use super::AppEntity;
+use crate::error::ResourceType;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(schema_name = "links", table_name = "tags")]

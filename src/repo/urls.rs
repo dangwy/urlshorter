@@ -1,16 +1,23 @@
+use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
+use crate::{
+    entity,
+    error::{AppResult, ToAppResult},
+    repo, utils,
+};
 use chrono::{NaiveDateTime, Utc};
 use sea_orm::prelude::DateTime;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
-              DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, DbBackend, SelectColumns};
+use sea_orm::{
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
+    DatabaseTransaction, DbBackend, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    SelectColumns,
+};
 use serde_json::from_str;
 use uuid::Uuid;
-use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
-use crate::{entity, error::{AppResult, ToAppResult}, repo, utils};
 
 #[tracing::instrument]
 pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64> {
-    let tag_ids = repo::tags::get_or_save_by_tags(tx,  &res.domain, &res.tags).await?;
+    let tag_ids = repo::tags::get_or_save_by_tags(tx, &res.domain, &res.tags).await?;
 
     let url = entity::urls::ActiveModel {
         domain: Set(res.domain.clone()),
@@ -32,11 +39,15 @@ pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64>
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_alias(conn: &DatabaseConnection, domain: &str, alias: &str,
+pub async fn find_by_alias(
+    conn: &DatabaseConnection,
+    domain: &str,
+    alias: &str,
 ) -> AppResult<Option<entity::urls::Model>> {
     let model = entity::urls::Entity::find()
         .filter(
-            entity::urls::Column::Domain.eq(domain)
+            entity::urls::Column::Domain
+                .eq(domain)
                 .and(entity::urls::Column::Alias.eq(alias))
                 .and(entity::urls::Column::Deleted.eq(false)),
         )
@@ -57,7 +68,7 @@ pub async fn delete(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn update_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<> {
+pub async fn update_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult {
     let url = entity::urls::ActiveModel {
         id: Set(id),
         deleted: Set(true),
@@ -68,8 +79,11 @@ pub async fn update_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult<> 
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn update_hits(conn: &DatabaseTransaction, id: i64, hits: i32)
-                           -> AppResult<entity::urls::Model> {
+pub async fn update_hits(
+    conn: &DatabaseTransaction,
+    id: i64,
+    hits: i32,
+) -> AppResult<entity::urls::Model> {
     let url = entity::urls::ActiveModel {
         id: Set(id),
         hits: Set(hits),
@@ -81,9 +95,13 @@ pub async fn update_hits(conn: &DatabaseTransaction, id: i64, hits: i32)
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn update_some(conn: &DatabaseTransaction, id: i64,
-                           original_url: &str,tags: Vec<i64>, expired_at: Option<NaiveDateTime>)
-    -> AppResult<entity::urls::Model> {
+pub async fn update_some(
+    conn: &DatabaseTransaction,
+    id: i64,
+    original_url: &str,
+    tags: Vec<i64>,
+    expired_at: Option<NaiveDateTime>,
+) -> AppResult<entity::urls::Model> {
     let url = entity::urls::ActiveModel {
         id: Set(id),
         original_url: Set(original_url.to_string()),
@@ -95,7 +113,6 @@ pub async fn update_some(conn: &DatabaseTransaction, id: i64,
 
     Ok(model)
 }
-
 
 #[cfg(test)]
 mod tests {

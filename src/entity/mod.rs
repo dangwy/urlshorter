@@ -8,8 +8,8 @@ use crate::{
     error::ResourceType,
 };
 
-pub mod urls;
 pub mod tags;
+pub mod urls;
 
 pub trait AppEntity {
     const RESOURCE: ResourceType;

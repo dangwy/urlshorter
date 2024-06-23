@@ -40,7 +40,7 @@ pub struct UserClaims {
 }
 
 impl UserClaims {
-    pub fn new(duration: Duration, user_id: Uuid, session_id: Uuid, ) -> Self {
+    pub fn new(duration: Duration, user_id: Uuid, session_id: Uuid) -> Self {
         let now = Utc::now().timestamp();
         Self {
             iat: now,
@@ -87,16 +87,14 @@ pub trait UserClaimsRequest {
 
 impl UserClaimsRequest for axum::extract::Request {
     fn get_user_id(&self) -> AppResult<Uuid> {
-        self
-            .extensions()
+        self.extensions()
             .get::<UserClaims>()
             .map(|u| u.uid)
             .ok_or_else(|| AppError::UnauthorizedError("User Must Login".to_string()))
     }
 
     fn get_user_claims(&self) -> AppResult<UserClaims> {
-        self
-            .extensions()
+        self.extensions()
             .get::<UserClaims>()
             .cloned()
             .ok_or_else(|| AppError::UnauthorizedError("User Must Login".to_string()))

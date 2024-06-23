@@ -1,12 +1,12 @@
-use once_cell::sync::Lazy;
 use crate::{
-    client::{http::HttpClient,  ClientBuilder, redis::RedisClient,},
-    configure::{env::get_env_source},
+    client::{http::HttpClient, redis::RedisClient, ClientBuilder},
+    configure::env::get_env_source,
     // handler::openapi::ApiDoc,
 };
+use once_cell::sync::Lazy;
 
 // use jsonwebtoken::{DecodingKey, EncodingKey};
-use std::{ time::Duration};
+use std::time::Duration;
 // use serde_json::from_str;
 // use utoipa::OpenApi;
 
