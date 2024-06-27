@@ -6,7 +6,7 @@ use super::AppEntity;
 use crate::error::ResourceType;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "links", table_name = "urls")]
+#[sea_orm(table_name = "urls")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
@@ -25,6 +25,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
     pub hits: i32,
+    pub client_id: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

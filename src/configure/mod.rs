@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
-use self::{db::DatabaseConfig, http::HttpClientConfig, redis::RedisConfig, server::ServerConfig};
+use self::{db::DatabaseConfig, http::HttpClientConfig, redis::RedisConfig, 
+           server::ServerConfig, secret::SecretConfig};
 use crate::utils::dir::get_project_root;
 use ::tracing::info;
 use config::{ConfigError, Environment};
@@ -22,7 +23,7 @@ pub struct AppConfig {
     // pub redis_cluster: CRedisConfig,
     pub db: DatabaseConfig,
     pub http: HttpClientConfig,
-    // pub secret: SecretConfig,
+    pub secret: SecretConfig,
 }
 
 impl AppConfig {

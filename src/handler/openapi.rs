@@ -4,7 +4,7 @@ use utoipa::{
 };
 
 // use crate::dto::*;
-// use crate::entity::role::RoleUser;
+// use crate::entities::role::RoleUser;
 use crate::error::{AppError, AppResponseError};
 use crate::utils::claim::UserClaims;
 

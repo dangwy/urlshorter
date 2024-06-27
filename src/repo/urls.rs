@@ -1,8 +1,8 @@
 use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
 use crate::{
-    entity,
-    error::{AppResult, ToAppResult},
-    repo, utils,
+	entities,
+	error::{AppResult, ToAppResult},
+	repo, utils,
 };
 use chrono::{NaiveDateTime, Utc};
 use sea_orm::prelude::DateTime;
@@ -19,7 +19,7 @@ use uuid::Uuid;
 pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64> {
     let tag_ids = repo::tags::get_or_save_by_tags(tx, &res.domain, &res.tags).await?;
 
-    let url = entity::urls::ActiveModel {
+    let url = entities::urls::ActiveModel {
         domain: Set(res.domain.clone()),
         alias: Set(res.alias.clone()),
         short_url: Set(res.shorter_url.clone()),
@@ -43,13 +43,13 @@ pub async fn find_by_alias(
     conn: &DatabaseConnection,
     domain: &str,
     alias: &str,
-) -> AppResult<Option<entity::urls::Model>> {
-    let model = entity::urls::Entity::find()
+) -> AppResult<Option<entities::urls::Model>> {
+    let model = entities::urls::Entity::find()
         .filter(
-            entity::urls::Column::Domain
+	        entities::urls::Column::Domain
                 .eq(domain)
-                .and(entity::urls::Column::Alias.eq(alias))
-                .and(entity::urls::Column::Deleted.eq(false)),
+                .and(entities::urls::Column::Alias.eq(alias))
+                .and(entities::urls::Column::Deleted.eq(false)),
         )
         .one(conn)
         .await?;
@@ -58,23 +58,23 @@ pub async fn find_by_alias(
 
 #[tracing::instrument(skip_all)]
 pub async fn delete(conn: &DatabaseTransaction, id: i64) -> AppResult<()> {
-    let url = entity::urls::ActiveModel {
+    let url = entities::urls::ActiveModel {
         id: Set(id),
         ..Default::default()
     };
 
-    let _ = entity::urls::Entity::delete(url).exec(conn).await?;
+    let _ = entities::urls::Entity::delete(url).exec(conn).await?;
     Ok(())
 }
 
 #[tracing::instrument(skip_all)]
 pub async fn update_deleted(conn: &DatabaseTransaction, id: i64) -> AppResult {
-    let url = entity::urls::ActiveModel {
+    let url = entities::urls::ActiveModel {
         id: Set(id),
         deleted: Set(true),
         ..Default::default()
     };
-    entity::urls::Entity::update(url).exec(conn).await?;
+    entities::urls::Entity::update(url).exec(conn).await?;
     Ok(())
 }
 
@@ -83,13 +83,13 @@ pub async fn update_hits(
     conn: &DatabaseTransaction,
     id: i64,
     hits: i32,
-) -> AppResult<entity::urls::Model> {
-    let url = entity::urls::ActiveModel {
+) -> AppResult<entities::urls::Model> {
+    let url = entities::urls::ActiveModel {
         id: Set(id),
         hits: Set(hits),
         ..Default::default()
     };
-    let model = entity::urls::Entity::update(url).exec(conn).await?;
+    let model = entities::urls::Entity::update(url).exec(conn).await?;
 
     Ok(model)
 }
@@ -101,15 +101,15 @@ pub async fn update_some(
     original_url: &str,
     tags: Vec<i64>,
     expired_at: Option<NaiveDateTime>,
-) -> AppResult<entity::urls::Model> {
-    let url = entity::urls::ActiveModel {
+) -> AppResult<entities::urls::Model> {
+    let url = entities::urls::ActiveModel {
         id: Set(id),
         original_url: Set(original_url.to_string()),
         tags: Set(Some(tags)),
         expired_at: Set(expired_at),
         ..Default::default()
     };
-    let model = entity::urls::Entity::update(url).exec(conn).await?;
+    let model = entities::urls::Entity::update(url).exec(conn).await?;
 
     Ok(model)
 }
@@ -118,7 +118,7 @@ pub async fn update_some(
 mod tests {
     // use super::*;
     // use test_context::test_context;
-    // use crate::entity::TransactionTestContext;
+    // use crate::entities::TransactionTestContext;
     //
     // // #[test_context(TransactionTestContext)]
     // #[tokio::test]

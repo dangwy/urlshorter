@@ -2,7 +2,7 @@ pub mod client;
 pub mod configure;
 pub mod constant;
 pub mod dto;
-pub mod entity;
+pub mod entities;
 pub mod error;
 pub mod handler;
 pub mod migration;

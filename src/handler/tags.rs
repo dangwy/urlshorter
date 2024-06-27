@@ -14,9 +14,9 @@ use tracing::{info, warn};
 	path = "/tags",
 	request_body = CreateTagRequest,
 	responses(
-	(status = 200, description = "Success create short url", body = [CreateTagResponse]),
-	(status = 400, description = "Invalid data input", body = [AppResponseError]),
-	(status = 500, description = "Internal server error", body = [AppResponseError])
+		(status = 200, description = "Success create short url", body = [CreateTagResponse]),
+		(status = 400, description = "Invalid data input", body = [AppResponseError]),
+		(status = 500, description = "Internal server error", body = [AppResponseError])
 	)
 )]
 pub async fn create(
@@ -40,9 +40,9 @@ pub async fn create(
 	post,
 	path = "/tags",
 	responses(
-	(status = 200, description = "Success create short url", body = [CreateTagResponse]),
-	(status = 400, description = "Invalid data input", body = [AppResponseError]),
-	(status = 500, description = "Internal server error", body = [AppResponseError])
+		(status = 200, description = "Success create short url", body = [CreateTagResponse]),
+		(status = 400, description = "Invalid data input", body = [AppResponseError]),
+		(status = 500, description = "Internal server error", body = [AppResponseError])
 	)
 )]
 pub async fn get(

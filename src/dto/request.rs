@@ -74,3 +74,18 @@ pub struct CreateTagRequest {
     #[garde(skip)]
     pub expired_at: String,
 }
+
+// Token
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate, Dummy, IntoParams)]
+pub struct RefreshTokenRequest {
+    #[garde(length(min = 30))]
+    pub token: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate, Dummy, IntoParams)]
+pub struct GenerateTokenRequest {
+    #[garde(length(min = 10))]
+    pub access_key: String,
+    #[garde(length(min = 10))]
+    pub secret_key: String,
+}

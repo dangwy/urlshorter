@@ -14,13 +14,30 @@ use fake::Dummy;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-// use crate::entity::urls::Model;
+// use crate::entities::urls::Model;
 
 pub trait RedisKey: Debug + Display {
     type Value: Serialize + DeserializeOwned + Debug;
     const EXPIRE_TIME: Duration;
     fn expire(&self) -> Duration {
         Self::EXPIRE_TIME
+    }
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Dummy, Ord, PartialOrd, Eq, PartialEq, Clone)]
+pub struct SessionKey {
+    pub u_id: Uuid,
+}
+
+impl RedisKey for SessionKey {
+    type Value = Uuid;
+    const EXPIRE_TIME: Duration = EXPIRE_SESSION_CODE_SECS;
+}
+
+impl Display for SessionKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SESSION_KEY_{}", self.u_id)
     }
 }
 

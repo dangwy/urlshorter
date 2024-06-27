@@ -1,23 +1,35 @@
+use std::io::Cursor;
 use crate::dto::request::*;
 use crate::dto::response::*;
 use crate::error::invalid_input_error;
 use crate::error::AppResult;
-use crate::repo;
+use crate::{repo, utils};
 use crate::server::state::AppState;
-use crate::service;
-use crate::service::redis::UrlKey;
+// use crate::service;
+// use crate::service::redis::UrlKey;
 use chrono::prelude::*;
+use murmur3::murmur3_32;
 use sea_orm::ActiveModelTrait;
 use sea_orm::TransactionTrait;
 
 pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResponse> {
     // If alias is empty, generate a new one, otherwise set it to redis
-    let mut alias = if req.alias.is_empty() {
-        let key = UrlKey {
-            domain: req.domain.clone() + ":" + "urlshorter",
-        };
-        let incr_id = service::redis::incr(&state.redis, &key).await?;
-        base62::encode(incr_id as u128)
+
+    // Redis incr + base62 solution
+    // let mut alias = if req.alias.is_empty() {
+    //     let key = UrlKey {
+    //         domain: req.domain.clone() + ":" + "urlshorter",
+    //     };
+    //     let incr_id = service::redis::incr(&state.redis, &key).await?;
+    //     base62::encode(incr_id as u128)
+    // } else {
+    //     req.alias.clone()
+    // };
+
+    // Pure DB solution: murmur3 + base62 solution
+    let alias = if req.alias.is_empty() {
+        let mut res = murmur3_32(&mut Cursor::new(req.original_url.as_str()), 0)?;
+        base62::encode(res as u128)
     } else {
         req.alias.clone()
     };
@@ -25,7 +37,7 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
     let res = UrlResponse {
         domain: req.domain.clone(),
         alias: alias.clone(),
-        shorter_url: req.domain + "/" + alias.as_mut_str(),
+        shorter_url: req.domain + "/" + alias.as_str(),
         deleted: false,
         tags: req.tags.split(",").map(|s| s.to_string()).collect(),
         created_at: Utc::now().naive_utc(),

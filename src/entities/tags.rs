@@ -6,7 +6,7 @@ use super::AppEntity;
 use crate::error::ResourceType;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "links", table_name = "tags")]
+#[sea_orm(table_name = "tags")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
@@ -43,8 +43,8 @@ impl ActiveModelBehavior for ActiveModel {}
 //     Tags,
 // }
 //
-// impl Related<super::rela::Entity> for crate::entity::urls::Entity {
+// impl Related<super::rela::Entity> for crate::entities::urls::Entity {
 //     fn to() -> RelationDef {
-//         crate::entity::urls::Relation::Rela.def()
+//         crate::entities::urls::Relation::Rela.def()
 //     }
 // }

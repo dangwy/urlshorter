@@ -24,8 +24,8 @@ impl DatabaseClientExt for DatabaseClient {
             .idle_timeout(Duration::from_secs(8))
             .max_lifetime(Duration::from_secs(8))
             .set_schema_search_path(config.db.schema.clone())
-            .sqlx_logging(true)
-            .sqlx_logging_level(log::LevelFilter::Debug);
+            .sqlx_logging(false)
+            .sqlx_logging_level(log::LevelFilter::Info);
         let db = Database::connect(opt).await?;
         Ok(db)
     }
@@ -65,7 +65,7 @@ pub async fn drop_database(db: &DatabaseConnection, database_name: &str) -> AppR
 mod tests {
     use super::*;
     use crate::constant::CONFIG;
-    use crate::entity::tags;
+    use crate::entities::tags;
     use sea_orm::EntityTrait;
 
     #[tokio::test]

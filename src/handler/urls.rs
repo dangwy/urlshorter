@@ -22,9 +22,7 @@ use crate::utils::claim::UserClaims;
         (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn create(
-    State(state): State<AppState>,
-    Json(req): Json<CreateUrlRequest>,
+pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequest>,
 ) -> AppResult<Json<UrlResponse>> {
     info!("Create a new short link with request: {req:?}");
     req.validate(&())?;
@@ -72,9 +70,9 @@ pub async fn get(
     delete,
     path = "/alias",
     responses(
-    (status = 200, description = "Success active user"),
-    (status = 400, description = "Invalid data input", body = [AppResponseError]),
-    (status = 500, description = "Internal server error", body = [AppResponseError])
+        (status = 200, description = "Success active user"),
+        (status = 400, description = "Invalid data input", body = [AppResponseError]),
+        (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
 pub async fn delete(
@@ -129,9 +127,9 @@ pub async fn patch(
     request_body = ActiveRequest,
     path = "/alias2",
     responses(
-    (status = 200, description = "Success redirect to original url", body = [RedirectUrlResponse]),
-    (status = 400, description = "Invalid data input", body = [AppResponseError]),
-    (status = 500, description = "Internal server error", body = [AppResponseError])
+        (status = 200, description = "Success redirect to original url", body = [RedirectUrlResponse]),
+        (status = 400, description = "Invalid data input", body = [AppResponseError]),
+        (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
 pub async fn redirect(

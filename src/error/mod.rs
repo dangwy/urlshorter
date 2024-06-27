@@ -8,7 +8,7 @@ use serde::Serialize;
 use strum::EnumString;
 use utoipa::ToSchema;
 
-use crate::entity;
+use crate::entities;
 
 pub type AppResult<T = ()> = std::result::Result<T, AppError>;
 
@@ -372,14 +372,12 @@ pub enum ResourceType {
     Urls,
     #[strum(serialize = "TAGS")]
     Tags,
-    #[strum(serialize = "RELA")]
-    Rela,
-    #[strum(serialize = "FILE")]
-    File,
+    #[strum(serialize = "CLIENTS")]
+    Clients,
     #[strum(serialize = "SESSION")]
     Session,
-    #[strum(serialize = "MESSAGE")]
-    Message,
+    #[strum(serialize = "FILE")]
+    File,
 }
 
 pub fn invalid_input_error(field: &'static str, message: &'static str) -> AppError {
@@ -389,7 +387,7 @@ pub fn invalid_input_error(field: &'static str, message: &'static str) -> AppErr
 }
 
 pub trait ToAppResult {
-    type Output: entity::AppEntity;
+    type Output: entities::AppEntity;
     fn to_result(self) -> AppResult<Self::Output>;
     fn check_absent(self) -> AppResult;
     fn check_absent_details(self, details: Vec<(String, String)>) -> AppResult;
@@ -398,7 +396,7 @@ pub trait ToAppResult {
 
 impl<T> ToAppResult for Option<T>
 where
-    T: entity::AppEntity,
+    T: entities::AppEntity,
 {
     type Output = T;
     fn to_result(self) -> AppResult<Self::Output> {

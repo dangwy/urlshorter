@@ -1,4 +1,3 @@
-/*
 use std::{fs, path::PathBuf};
 use serde::Deserialize;
 use crate::utils;
@@ -57,4 +56,3 @@ mod tests {
         assert!(!key.is_empty())
     }
 }
-*/

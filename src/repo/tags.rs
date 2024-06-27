@@ -4,10 +4,10 @@ use sea_orm::{
     DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait,
 };
 // use serde::de::Unexpected::Option;
-use crate::entity::tags::Model;
+use crate::entities::tags::Model;
 use crate::{
-    entity::tags,
-    error::{AppResult, ToAppResult},
+	entities::tags,
+	error::{AppResult, ToAppResult},
 };
 
 #[tracing::instrument(skip_all)]
@@ -25,10 +25,7 @@ pub async fn save(tx: &DatabaseTransaction, domain: &str, tag: &str) -> AppResul
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_id(
-    conn: &DatabaseConnection,
-    domain: &str,
-    tag_id: i64,
+pub async fn find_by_id(conn: &DatabaseConnection, domain: &str, tag_id: i64,
 ) -> AppResult<Option<tags::Model>> {
     let model = tags::Entity::find_by_id(tag_id)
         .filter(tags::Column::Domain.eq(domain))
@@ -38,10 +35,7 @@ pub async fn find_by_id(
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_ids(
-    conn: &DatabaseConnection,
-    domain: &str,
-    tag_ids: Vec<i64>,
+pub async fn find_by_ids(conn: &DatabaseConnection, domain: &str, tag_ids: Vec<i64>,
 ) -> AppResult<Vec<String>> {
     let mut tags: Vec<String> = vec![];
     let model = tags::Entity::find()
@@ -57,10 +51,7 @@ pub async fn find_by_ids(
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_tag(
-    conn: &DatabaseConnection,
-    domain: &str,
-    tag: &str,
+pub async fn find_by_tag(conn: &DatabaseConnection, domain: &str, tag: &str,
 ) -> AppResult<Option<Model>> {
     let model = tags::Entity::find()
         .filter(
@@ -74,10 +65,7 @@ pub async fn find_by_tag(
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_tag_tx(
-    tx: &DatabaseTransaction,
-    domain: &str,
-    tag: &str,
+pub async fn find_by_tag_tx(tx: &DatabaseTransaction, domain: &str, tag: &str,
 ) -> AppResult<Option<Model>> {
     let model = tags::Entity::find()
         .filter(
@@ -91,10 +79,7 @@ pub async fn find_by_tag_tx(
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn get_or_save_by_tags(
-    tx: &DatabaseTransaction,
-    domain: &str,
-    tags: &Vec<String>,
+pub async fn get_or_save_by_tags(tx: &DatabaseTransaction, domain: &str, tags: &Vec<String>,
 ) -> AppResult<Vec<i64>> {
     let mut tag_ids: Vec<i64> = vec![];
 
@@ -127,7 +112,7 @@ pub async fn delete_by_tag(tx: &DatabaseTransaction, domain: &str, tag: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::entity::TransactionTestContext;
+    use crate::entities::TransactionTestContext;
     use test_context::test_context;
 
     #[test_context(TransactionTestContext)]
