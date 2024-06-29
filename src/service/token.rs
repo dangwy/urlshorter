@@ -1,3 +1,4 @@
+use serde_json::from_str;
 use crate::constant::*;
 use crate::dto::response::TokenResponse;
 use crate::dto::{GenerateTokenRequest, RefreshTokenRequest};
@@ -41,4 +42,8 @@ pub async fn generate(state: &AppState,req: GenerateTokenRequest) -> AppResult<T
 		refresh_token,
 		EXPIRE_BEARER_TOKEN_SECS.as_secs(),
 	))
+}
+
+pub async fn validate(state: &AppState, uuid: Uuid) -> AppResult<Option<crate::entities::clients::Model>> {
+	Ok(repo::clients::find_by_id(&*state.db, uuid).await?)
 }

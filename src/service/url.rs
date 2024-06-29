@@ -95,11 +95,7 @@ pub async fn delete(state: AppState, domain: &str, alias: &str) -> AppResult<i64
     }
 }
 
-pub async fn patch(
-    state: AppState,
-    domain: &str,
-    alias: &str,
-    req: PatchUrlRequest,
+pub async fn patch(state: AppState, domain: &str, alias: &str, req: PatchUrlRequest,
 ) -> AppResult<UrlResponse> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
 
@@ -149,10 +145,7 @@ pub async fn patch(
     Ok(ret.unwrap())
 }
 
-pub async fn redirect(
-    state: AppState,
-    domain: &str,
-    alias: &str,
+pub async fn redirect(state: AppState, domain: &str, alias: &str,
 ) -> AppResult<RedirectUrlResponse> {
     let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
     if let Some(res) = urls_model {

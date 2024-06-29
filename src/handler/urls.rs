@@ -2,11 +2,14 @@ use axum::extract::{Path, Query, State};
 use axum::Json;
 // use axum::routing::{get, path};
 use garde::Validate;
+use tokio_tungstenite::tungstenite::client;
 use tracing::{info, warn};
 
 use crate::dto::request::*;
 use crate::dto::response::*;
 use crate::error::AppResult;
+use crate::error::AppError;
+use crate::repo::clients;
 use crate::server::state::AppState;
 use crate::service;
 use crate::utils::claim::UserClaims;
@@ -51,17 +54,24 @@ pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequ
 pub async fn get(
     State(state): State<AppState>,
     Path((domain, alias)): Path<(String, String)>,
+    client: UserClaims,
 ) -> AppResult<Json<UrlResponse>> {
     info!("Get url info with domain and alias: {domain:?}/{alias:?}");
-    match service::url::get(state, &domain, &alias).await {
-        Ok(resp) => {
-            info!("Get url info successfully.");
-            Ok(Json(resp))
+    let clients = service::token::validate(&state, client.uid).await?;
+    if let Some(client) = clients {
+        info!("client valid: {client:?}");
+        match service::url::get(state, &domain, &alias).await {
+            Ok(resp) => {
+                info!("Get url info successfully.");
+                Ok(Json(resp))
+            }
+            Err(e) => {
+                warn!("Unsuccessful get url info:: {e:?}");
+                Err(e)
+            }
         }
-        Err(e) => {
-            warn!("Unsuccessful get url info:: {e:?}");
-            Err(e)
-        }
+    }else {
+        Err(AppError::InvalidInputError(garde::Report::new()))
     }
 }
 

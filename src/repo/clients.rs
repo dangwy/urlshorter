@@ -16,7 +16,8 @@ pub async fn find_by_id<C>(conn: &C, id: Uuid) -> AppResult<Option<clients::Mode
 where
 	C: ConnectionTrait,
 {
-	let model = clients::Entity::find_by_id(id).one(conn).await?;
+	let model = clients::Entity::find_by_id(id)
+		.filter(clients::Column::IsActive.eq(true)).one(conn).await?;
 	Ok(model)
 }
 
