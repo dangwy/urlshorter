@@ -6,7 +6,7 @@ use crate::configure::AppConfig;
 use crate::error::AppResult;
 use crate::utils;
 use tracing::info;
-use utils::random;
+// use utils::random;
 
 pub type DatabaseClient = DatabaseConnection;
 

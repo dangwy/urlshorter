@@ -9,12 +9,9 @@ impl MigrationTrait for Migration {
 	async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
 		let db = manager.get_connection();
 		let tx = db.begin().await?;
-
-		let db = manager.get_connection();
-		let tx = db.begin().await?;
 		tx.execute_unprepared(
 			r#"CREATE TABLE clients (
-			  id UUID NOT NULL primary key,
+			  id bigserial primary key,
 			  access_key text NOT NULL UNIQUE,
 			  secret_key text  NOT NULL,
 			  is_active bool NOT NULL default true, 

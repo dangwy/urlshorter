@@ -14,7 +14,6 @@ use fake::Dummy;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-// use crate::entities::urls::Model;
 
 pub trait RedisKey: Debug + Display {
     type Value: Serialize + DeserializeOwned + Debug;
@@ -151,10 +150,10 @@ pub async fn incr(client: &RedisClient, key: &impl RedisKey) -> AppResult<i64> {
 //     Ok(())
 // }
 
+#[cfg(test)]
 mod tests {
-    use fake::{Fake, Faker};
-
     use super::*;
+    use fake::{Fake, Faker};
 
     #[tokio::test]
     async fn test_set_and_get_str_redis_service() {

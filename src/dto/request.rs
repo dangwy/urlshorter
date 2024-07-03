@@ -1,7 +1,7 @@
 // use fake::faker::internet::en::{Password, SafeEmail, Username};
-use fake::{faker, Dummy};
+use fake:: Dummy;
 use garde::Validate;
-use lettre::transport::smtp::extension::ClientId::Domain;
+// use lettre::transport::smtp::extension::ClientId::Domain;
 use serde::{Deserialize, Serialize};
 // use strum::Display;
 use utoipa::{IntoParams, ToSchema};

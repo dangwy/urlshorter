@@ -3,16 +3,13 @@ use crate::dto::request::*;
 use crate::dto::response::*;
 use crate::error::invalid_input_error;
 use crate::error::AppResult;
-use crate::{repo, utils};
+use crate::repo;
 use crate::server::state::AppState;
-// use crate::service;
-// use crate::service::redis::UrlKey;
 use chrono::prelude::*;
 use murmur3::murmur3_32;
-use sea_orm::ActiveModelTrait;
 use sea_orm::TransactionTrait;
 
-pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResponse> {
+pub async fn create(state: AppState, client_id: i64, req: CreateUrlRequest) -> AppResult<UrlResponse> {
     // If alias is empty, generate a new one, otherwise set it to redis
 
     // Redis incr + base62 solution
@@ -28,7 +25,7 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
 
     // Pure DB solution: murmur3 + base62 solution
     let alias = if req.alias.is_empty() {
-        let mut res = murmur3_32(&mut Cursor::new(req.original_url.as_str()), 0)?;
+        let res = murmur3_32(&mut Cursor::new(req.original_url.as_str()), 0)?;
         base62::encode(res as u128)
     } else {
         req.alias.clone()
@@ -54,14 +51,14 @@ pub async fn create(state: AppState, req: CreateUrlRequest) -> AppResult<UrlResp
     };
 
     let tx = state.db.begin().await?;
-    let _ = repo::urls::save(&tx, &res).await?;
+    let _ = repo::urls::save(&tx, &res, client_id).await?;
     tx.commit().await?;
 
     Ok(res)
 }
 
-pub async fn get(state: AppState, domain: &str, alias: &str) -> AppResult<UrlResponse> {
-    let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
+pub async fn get(state: AppState, client_id:i64, domain: &str, alias: &str) -> AppResult<UrlResponse> {
+    let urls_model = repo::urls::find_by_alias(&state.db, client_id, domain, alias).await?;
     if let Some(res) = urls_model {
         let tags =
             repo::tags::find_by_ids(&state.db, &domain, res.tags.unwrap_or_default()).await?;
@@ -83,8 +80,8 @@ pub async fn get(state: AppState, domain: &str, alias: &str) -> AppResult<UrlRes
     }
 }
 
-pub async fn delete(state: AppState, domain: &str, alias: &str) -> AppResult<i64> {
-    let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
+pub async fn delete(state: AppState, client_id: i64, domain: &str, alias: &str) -> AppResult<i64> {
+    let urls_model = repo::urls::find_by_alias(&state.db, client_id, domain, alias).await?;
     if let Some(res) = urls_model {
         let tx = state.db.begin().await?;
         let _ = repo::urls::update_deleted(&tx, res.id).await?;
@@ -95,9 +92,9 @@ pub async fn delete(state: AppState, domain: &str, alias: &str) -> AppResult<i64
     }
 }
 
-pub async fn patch(state: AppState, domain: &str, alias: &str, req: PatchUrlRequest,
+pub async fn patch(state: AppState,client_id: i64, domain: &str, alias: &str, req: PatchUrlRequest,
 ) -> AppResult<UrlResponse> {
-    let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
+    let urls_model = repo::urls::find_by_alias(&state.db, client_id, domain, alias).await?;
 
     let tx = state.db.begin().await?;
 
@@ -145,9 +142,9 @@ pub async fn patch(state: AppState, domain: &str, alias: &str, req: PatchUrlRequ
     Ok(ret.unwrap())
 }
 
-pub async fn redirect(state: AppState, domain: &str, alias: &str,
+pub async fn redirect(state: AppState, client_id: i64, domain: &str, alias: &str,
 ) -> AppResult<RedirectUrlResponse> {
-    let urls_model = repo::urls::find_by_alias(&state.db, domain, alias).await?;
+    let urls_model = repo::urls::find_by_alias(&state.db, client_id, domain, alias).await?;
     if let Some(res) = urls_model {
         let url = RedirectUrlResponse {
             original_url: res.original_url,

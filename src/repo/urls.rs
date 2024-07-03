@@ -1,22 +1,18 @@
-use crate::dto::{request::CreateUrlRequest, response::UrlResponse};
+use crate::dto::response::UrlResponse;
 use crate::{
 	entities,
-	error::{AppResult, ToAppResult},
-	repo, utils,
+	error::AppResult,
+	repo,
 };
-use chrono::{NaiveDateTime, Utc};
-use sea_orm::prelude::DateTime;
+use chrono::{NaiveDateTime};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
-    DatabaseTransaction, DbBackend, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-    SelectColumns,
+    ActiveModelTrait, ColumnTrait,   DatabaseConnection,
+    DatabaseTransaction,  EntityTrait,  QueryFilter,
 };
-use serde_json::from_str;
-use uuid::Uuid;
 
 #[tracing::instrument]
-pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64> {
+pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse, client_id: i64) -> AppResult<i64> {
     let tag_ids = repo::tags::get_or_save_by_tags(tx, &res.domain, &res.tags).await?;
 
     let url = entities::urls::ActiveModel {
@@ -30,6 +26,7 @@ pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64>
         original_url: Set(res.original_url.clone()),
         description: Set(Some(res.description.clone())),
         hits: Set(res.hits),
+        client_id: Set(client_id),
         ..Default::default()
     }
     .insert(tx)
@@ -41,13 +38,14 @@ pub async fn save(tx: &DatabaseTransaction, res: &UrlResponse) -> AppResult<i64>
 #[tracing::instrument(skip_all)]
 pub async fn find_by_alias(
     conn: &DatabaseConnection,
+    client_id: i64,
     domain: &str,
     alias: &str,
 ) -> AppResult<Option<entities::urls::Model>> {
     let model = entities::urls::Entity::find()
         .filter(
-	        entities::urls::Column::Domain
-                .eq(domain)
+	        entities::urls::Column::ClientId.eq(client_id)
+                .and(entities::urls::Column::Domain.eq(domain))
                 .and(entities::urls::Column::Alias.eq(alias))
                 .and(entities::urls::Column::Deleted.eq(false)),
         )

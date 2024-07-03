@@ -3,7 +3,6 @@ use crate::dto::response::*;
 use crate::error::AppResult;
 use crate::server::state::AppState;
 use crate::service;
-use crate::utils::claim::UserClaims;
 use axum::extract::{Path, State};
 use axum::Json;
 use tracing::{info, warn};
@@ -36,11 +35,12 @@ pub async fn create(
     }
 }
 
+/// Get tag info
 #[utoipa::path(
-	post,
+	get,
 	path = "/tags",
 	responses(
-		(status = 200, description = "Success create short url", body = [CreateTagResponse]),
+		(status = 200, description = "Success get short url", body = [TagResponse]),
 		(status = 400, description = "Invalid data input", body = [AppResponseError]),
 		(status = 500, description = "Internal server error", body = [AppResponseError])
 	)
@@ -62,11 +62,12 @@ pub async fn get(
     }
 }
 
+/// Delete tag info
 #[utoipa::path(
-	post,
+	delete,
 	path = "/tags",
 	responses(
-		(status = 200, description = "Success create short url"),
+		(status = 200, description = "Success delete short url"),
 		(status = 400, description = "Invalid data input", body = [AppResponseError]),
 		(status = 500, description = "Internal server error", body = [AppResponseError])
 	)
@@ -77,7 +78,7 @@ pub async fn delete(
 ) -> AppResult {
     info!("Delete tag info with domain and tag: {domain:?}/{tag:?}");
     match service::tags::delete(state, &domain, &tag).await {
-        Ok(resp) => {
+        Ok(_) => {
             info!("Delete tag info successfully.");
             Ok(())
         }

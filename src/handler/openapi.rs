@@ -3,10 +3,8 @@ use utoipa::{
     Modify, OpenApi,
 };
 
-// use crate::dto::*;
-// use crate::entities::role::RoleUser;
+use crate::dto::*;
 use crate::error::{AppError, AppResponseError};
-use crate::utils::claim::UserClaims;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -18,57 +16,42 @@ use crate::utils::claim::UserClaims;
     // server api
         crate::handler::server::health_check,
         crate::handler::server::server_state,
-    // user api
-        crate::handler::user::register,
-        crate::handler::user::active,
-        crate::handler::user::login,
-        crate::handler::user::login2fa,
-        crate::handler::user::forget_password,
-        crate::handler::user::reset_password,
-        crate::handler::user::get_profile,
-        crate::handler::user::update_profile,
-        crate::handler::user::logout,
     // token api
-        crate::handler::token::info,
+        crate::handler::token::generate,
         crate::handler::token::refresh,
-    //admin user api
-        crate::handler::admin::user::list,
-
+    // urls api
+        crate::handler::urls::create,
+        crate::handler::urls::get,
+        crate::handler::urls::redirect,
+        crate::handler::urls::delete,
+    //tags api
+        crate::handler::tags::create,
+        crate::handler::tags::get,
+        crate::handler::tags::delete,
     ),
     components(
         schemas(
-            RegisterRequest,
-            RegisterResponse,
-            ActiveRequest,
-            ActiveRequest,
-            LoginRequest,
-            LoginResponse,
-            LoginRequest,
+            CreateUrlRequest,
+            GetUrlQueryParam,
+            PatchUrlRequest,
+            CreateTagRequest,
+            RefreshTokenRequest,
+            GenerateTokenRequest,
+            UrlResponse,
+            RedirectUrlResponse,
+            CreateTagResponse,
+            ServiceStatusResponse,
+            TokenResponse,
             AppResponseError,
             AppError,
             MessageResponse,
-            TokenInfoRequest,
-            UserClaims,
-            ForgetPasswordResponse,
-            SetPasswordRequest,
-            RegisterResponse,
-            TokenResponse,
-            ProfileResponse,
-            UpdateProfileRequest,
-            Direction,
-            ServiceStatusResponse,
-            GetUserResponse,
-            GetUserListResponse,
-            RefreshTokenRequest,
-            MessageResponse,
-            RoleUser,
         )
     ),
     tags(
         (name = "crate::handler::server", description = "server endpoints."),
-        (name = "crate::handler::user", description = "user endpoints."),
         (name = "crate::handler::token", description = "token endpoints."),
-        (name = "crate::handler::admin", description = "admin endpoints."),
+        (name = "crate::handler::urls", description = "urls endpoints."),
+        (name = "crate::handler::tags", description = "tags endpoints."),
     ),
     modifiers(&SecurityAddon)
 )]

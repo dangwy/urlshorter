@@ -1,18 +1,12 @@
-use sea_orm::ActiveValue::Set;
-use sea_orm::{
-	sea_query::Expr, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection,
-	DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait,
-};
-// use serde::de::Unexpected::Option;
+use sea_orm::{ColumnTrait,  ConnectionTrait, EntityTrait, QueryFilter};
 
 use crate::{
 	entities::clients,
-	error::{AppResult, ToAppResult},
+	error::AppResult,
 };
-use uuid::Uuid;
 
 #[tracing::instrument(skip_all)]
-pub async fn find_by_id<C>(conn: &C, id: Uuid) -> AppResult<Option<clients::Model>>
+pub async fn find_by_id<C>(conn: &C, id: i64) -> AppResult<Option<clients::Model>>
 where
 	C: ConnectionTrait,
 {

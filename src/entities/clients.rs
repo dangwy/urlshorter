@@ -8,7 +8,7 @@ use super::AppEntity;
 #[sea_orm(table_name = "clients")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: i64,
     #[sea_orm(column_type = "Text")]
     pub access_key: String,
     #[sea_orm(column_type = "Text")]

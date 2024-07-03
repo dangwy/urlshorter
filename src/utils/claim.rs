@@ -16,8 +16,6 @@ use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde::Serialize;
 use utoipa::ToSchema;
-use uuid::Uuid;
-// use crate::service::session;
 
 use crate::error::{AppError, AppResult};
 use crate::constant::ACCESS_TOKEN_DECODE_KEY;
@@ -32,12 +30,12 @@ pub struct UserClaims {
     pub iat: i64,
     // expiration
     pub exp: i64,
-    pub uid: Uuid,
+    pub uid: i64,
     // pub sid: Uuid,
 }
 
 impl UserClaims {
-    pub fn new(duration: Duration, uid: Uuid) -> Self {
+    pub fn new(duration: Duration, uid: i64) -> Self {
         let now = Utc::now().timestamp();
         Self {
             iat: now,
@@ -61,24 +59,23 @@ impl UserClaims {
 impl FromRequestParts<AppState> for UserClaims {
     type Rejection = AppError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &AppState,
+    async fn from_request_parts(parts: &mut Parts, _: &AppState,
     ) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization(bearer)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
             .await?;
         let user_claims = UserClaims::decode(bearer.token(), &ACCESS_TOKEN_DECODE_KEY)?.claims;
-        // session::check(&state.redis, &user_claims).await?;
         Ok(user_claims)
     }
 }
 
 pub trait UserClaimsRequest {
-    fn get_user_id(&self) -> AppResult<Uuid>;
+    fn get_user_id(&self) -> AppResult<i64>;
     fn get_user_claims(&self) -> AppResult<UserClaims>;
 }
 
 impl UserClaimsRequest for axum::extract::Request {
-    fn get_user_id(&self) -> AppResult<Uuid> {
+    fn get_user_id(&self) -> AppResult<i64> {
         self.extensions()
             .get::<UserClaims>()
             .map(|u| u.uid)
@@ -102,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_user_claims() {
-        let uid: Uuid = Faker.fake();
+        let uid: i64 = Faker.fake();
         let pair_key = RsaPairKey::new(2048).unwrap();
         let claims = UserClaims::new(
             Duration::from_secs(100),

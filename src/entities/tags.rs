@@ -1,9 +1,9 @@
 // use chrono::{DateTime, Utc};
-use fake::Dummy;
+// use fake::Dummy;
 use sea_orm::entity::prelude::*;
 
-use super::AppEntity;
-use crate::error::ResourceType;
+// use super::AppEntity;
+// use crate::error::ResourceType;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "tags")]

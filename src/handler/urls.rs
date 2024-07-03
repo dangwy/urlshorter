@@ -1,15 +1,12 @@
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::Json;
-// use axum::routing::{get, path};
 use garde::Validate;
-use tokio_tungstenite::tungstenite::client;
 use tracing::{info, warn};
 
 use crate::dto::request::*;
 use crate::dto::response::*;
 use crate::error::AppResult;
 use crate::error::AppError;
-use crate::repo::clients;
 use crate::server::state::AppState;
 use crate::service;
 use crate::utils::claim::UserClaims;
@@ -25,11 +22,14 @@ use crate::utils::claim::UserClaims;
         (status = 500, description = "Internal server error", body = [AppResponseError])
     )
 )]
-pub async fn create(State(state): State<AppState>, Json(req): Json<CreateUrlRequest>,
+pub async fn create(
+    State(state): State<AppState>,
+    client: UserClaims,
+    Json(req): Json<CreateUrlRequest>,
 ) -> AppResult<Json<UrlResponse>> {
     info!("Create a new short link with request: {req:?}");
     req.validate(&())?;
-    match service::url::create(state, req).await {
+    match service::url::create(state, client.uid, req).await {
         Ok(resp) => {
             info!("Successfully create link: ");
             Ok(Json(resp))
@@ -58,9 +58,9 @@ pub async fn get(
 ) -> AppResult<Json<UrlResponse>> {
     info!("Get url info with domain and alias: {domain:?}/{alias:?}");
     let clients = service::token::validate(&state, client.uid).await?;
-    if let Some(client) = clients {
+    if let Some(_) = clients {
         info!("client valid: {client:?}");
-        match service::url::get(state, &domain, &alias).await {
+        match service::url::get(state, client.uid, &domain, &alias).await {
             Ok(resp) => {
                 info!("Get url info successfully.");
                 Ok(Json(resp))
@@ -88,10 +88,11 @@ pub async fn get(
 pub async fn delete(
     State(state): State<AppState>,
     Path((domain, alias)): Path<(String, String)>,
+    client: UserClaims
 ) -> AppResult {
     info!("Delete short url alias: {domain:?}/{alias:?}");
-    match service::url::delete(state, &domain, &alias).await {
-        Ok(resp) => {
+    match service::url::delete(state, client.uid, &domain, &alias).await {
+        Ok(_) => {
             info!("Delete short url successfully");
             Ok(())
         }
@@ -117,9 +118,10 @@ pub async fn patch(
     State(state): State<AppState>,
     Path((domain, alias)): Path<(String, String)>,
     Json(req): Json<PatchUrlRequest>,
+    client: UserClaims,
 ) -> AppResult<Json<UrlResponse>> {
     info!("patch short url: {domain:?}/{alias:?}");
-    match service::url::patch(state, &domain, &alias, req).await {
+    match service::url::patch(state, client.uid, &domain, &alias, req).await {
         Ok(resp) => {
             info!("Patch url info successfully.");
             Ok(Json(resp))
@@ -134,7 +136,6 @@ pub async fn patch(
 /// Redirect to short url.
 #[utoipa::path(
     get,
-    request_body = ActiveRequest,
     path = "/alias2",
     responses(
         (status = 200, description = "Success redirect to original url", body = [RedirectUrlResponse]),
@@ -145,9 +146,10 @@ pub async fn patch(
 pub async fn redirect(
     State(state): State<AppState>,
     Path((domain, alias)): Path<(String, String)>,
+    client: UserClaims,
 ) -> AppResult<Json<RedirectUrlResponse>> {
     info!("Redirect to original url with token: {domain:?}/{alias:?}.");
-    match service::url::redirect(state, &domain, &alias).await {
+    match service::url::redirect(state, client.uid, &domain, &alias).await {
         Ok(resp) => {
             info!("User successfully redirected.");
             Ok(Json(resp))
